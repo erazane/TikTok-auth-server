@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "server.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/get-token", "methods": ["POST"], "dest": "server.js" },
+    { "src": "/tiktok/callback", "methods": ["GET"], "dest": "server.js" }
+  ]
+}

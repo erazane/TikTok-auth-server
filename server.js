@@ -3,38 +3,40 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// TikTok OAuth callback
-app.get('/tiktok/callback', async (req, res) => {
-    const authCode = req.query.auth_code; // TikTok sends 'auth_code'
-    const state = req.query.state;
+app.use(express.json()); // for parsing JSON bodies
 
-    println('Received auth code:', authCode);
+// Existing routes here (if any)
 
-    if (!authCode) {
-        return res.status(400).send('Authorization code is missing');
-    }
+// New route to exchange ROW code for access token
+app.post('/get-token', async (req, res) => {
+  const { auth_code } = req.body;
 
-    try {
-        // Exchange auth code for access token
-        const response = await axios.post('https://open-api.tiktokglobalshop.com/api/v1/oauth/token', {
-            app_key: 'YOUR_APP_KEY',
-            app_secret: 'YOUR_APP_SECRET',
-            auth_code: authCode,
-            grant_type: 'authorization_code'
-        });
+  if (!auth_code) {
+    return res.status(400).json({ error: 'auth_code is required' });
+  }
 
-        const accessToken = response.data.data.access_token;
+  try {
+    const response = await axios.post(
+      'https://open-api.tiktokglobalshop.com/api/v1/oauth/token',
+      {
+        app_key: process.env.TIKTOK_APP_KEY,
+        app_secret: process.env.TIKTOK_APP_SECRET,
+        auth_code: auth_code,
+        grant_type: 'authorization_code'
+      },
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
-        console.log('Access token:', accessToken);
-
-        // You can save the token in a DB or just return it
-        res.send(`Access token received: ${accessToken}`);
-    } catch (error) {
-        console.error(error.response?.data || error.message);
-        res.status(500).send('Error exchanging auth code');
-    }
+    return res.status(200).json(response.data);
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    return res.status(500).json({ error: err.response?.data || err.message });
+  }
 });
 
+// Start server
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
