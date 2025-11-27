@@ -8,6 +8,8 @@ app.get('/tiktok/callback', async (req, res) => {
     const authCode = req.query.auth_code; // TikTok sends 'auth_code'
     const state = req.query.state;
 
+    println('Received auth code:', authCode);
+
     if (!authCode) {
         return res.status(400).send('Authorization code is missing');
     }
